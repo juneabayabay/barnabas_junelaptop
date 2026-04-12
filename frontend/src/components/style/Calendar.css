@@ -1,0 +1,107 @@
+:root {
+  --teal-main: #2ca6a4;
+  --light-green: #c8f7c5;
+  --light-yellow: #fff7c2;
+  --light-red: #f7c5c5;
+}
+
+/* Page container */
+.calendar-page {
+  margin-top: 100px; /* offset for fixed navbar */
+  padding: 40px;
+  text-align: center;
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+.calendar-title {
+  color: var(--teal-main);
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.calendar-description {
+  margin-bottom: 30px;
+  font-size: 1rem;
+}
+
+.legend {
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 0 5px;
+}
+
+.legend.available {
+  background-color: var(--light-green);
+}
+
+.legend.pending {
+  background-color: var(--light-yellow);
+}
+
+.legend.taken {
+  background-color: var(--light-red);
+}
+
+/* React Calendar overrides */
+.react-calendar {
+  border: none;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  margin: 0 auto 40px auto;
+  max-width: 600px;
+}
+
+.react-calendar__tile--active {
+  background: var(--teal-main) !important;
+  color: white !important;
+  border-radius: 6px;
+}
+
+/* Slots styling */
+.slots-container {
+  margin-top: 20px;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 20px;
+  justify-items: center;
+  margin-top: 20px;
+}
+
+.slot {
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.slot.available {
+  background-color: var(--light-green);
+  border: 2px solid var(--teal-main);
+}
+
+.slot.taken {
+  background-color: var(--light-red);
+  border: 2px solid #d9534f;
+  cursor: not-allowed;
+}
+
+.slot.pending {
+  background-color: var(--light-yellow);
+  border: 2px solid #f0ad4e;
+}
+
+.slot:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -1,0 +1,41 @@
+:root {
+  --teal-main: #2ca6a4;
+  --teal-dark: #1f7a78;
+}
+
+/* Footer sits at bottom naturally, not fixed */
+.footer {
+  background-color: var(--teal-main);
+  color: #fff;
+  padding: 20px 40px;
+  text-align: center;
+  width: 100%;          /* ensures no left gap */
+  margin-top: auto;     /* pushes footer to bottom if using flex layout */
+  box-shadow: 0px -2px 6px rgba(0,0,0,0.1);
+}
+
+.footer-content {
+  max-width: 1200px;    /* centers content */
+  margin: 0 auto;       /* removes left space */
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.footer-links {
+  margin-top: 10px;
+}
+
+.footer-links a {
+  color: #fff;
+  margin: 0 10px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: var(--teal-dark);
+}
