@@ -76,11 +76,27 @@ def password_reset_token_created(reset_password_token, *args, **kwargs):
     msg.send()
 
 class Appointment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateField(default=timezone.now)
-    time = models.TimeField(default=timezone.now)
-    service = models.CharField(max_length=255, default='service')
-    created_at = models.DateTimeField( default=timezone.now)
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='appointments'
+    )
+    date = models.DateField()
+    time = models.TimeField()
+    service = models.CharField(max_length=255, blank=True, null=True)
+    other_concern = models.CharField(max_length=255, blank=True, null=True)
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user} - {self.date} {self.time}"
+        return f"{self.user.username} - {self.date} {self.time} ({self.status})"

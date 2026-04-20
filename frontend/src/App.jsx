@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import './App.css'
 import Home from './components/Home'
-import AppointmentCalendar from './components/AppointmentCalendar'
 import Login from './components/Login'
 import Register from './components/Register'
 import Navbar from './components/Navbar'
@@ -18,6 +17,7 @@ import AdminLogin from './components/AdminLogin'
 import Appointment from './components/Appointment'
 import AppointmentForm from './components/AppointmentForm'
 import AdminDashboard from './components/AdminDashboard'
+import AdminAppointments from './components/AdminAppointments'
 
 function App() {
   const location = useLocation();
@@ -34,7 +34,8 @@ function App() {
                       location.pathname.startsWith('/admin/billing') ||
                       location.pathname.startsWith('/admin/payments') ||
                       location.pathname.startsWith('/admin/patients') ||
-                      location.pathname.startsWith('/admin/reports');
+                      location.pathname.startsWith('/admin/reports') ||
+                      location.pathname.startsWith('/admin/appointments');
 
   return (
     <>
@@ -51,6 +52,7 @@ function App() {
           content={
             <Routes>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/appointments" element={<AdminAppointments />} />
             </Routes>
           }
         />
@@ -64,7 +66,7 @@ function App() {
                   <Route path="profile/" element={<Profile />} />
                   <Route path="about/" element={<About />} />
                   <Route path="services/" element={<Services />} />
-                  <Route path='calendar/' element={<AppointmentCalendar/>} />
+                  <Route path='calendar/' element={<AdminAppointments/>} />
                   <Route path="appointment/" element={<AppointmentForm />} />
                 </Route>
               </Routes>

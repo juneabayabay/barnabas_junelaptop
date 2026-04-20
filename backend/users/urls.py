@@ -8,5 +8,5 @@ router.register('register', RegisterViewset, basename='register')
 router.register('login', LoginViewset, basename='login')
 router.register('admin-login', AdminLoginViewset, basename='admin-login')
 router.register('users', UserViewset, basename='users')
-router.register('appointments', AppointmentViewSet, basename='appointment')
+router.register('appointments', AppointmentViewSet, basename='appointments')
 urlpatterns = router.urls

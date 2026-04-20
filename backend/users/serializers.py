@@ -6,15 +6,28 @@ from datetime import timedelta
 User = get_user_model()
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True) 
+
     class Meta:
         model = Appointment
         fields = [
-            'id', 
-            'date', 
-            'time', 
-            'service', 
+            'id',
+            'user',
+            'date',
+            'time',
+            'service',
+            'other_concern',
+            'status',
             'created_at',
         ]
+        
+    def validate(self, data):
+        if not data.get('service') and not data.get('other_concern'):
+            raise serializers.ValidationError("Either service or other_concern must be provided.")
+        if data.get('service') and data.get('other_concern'):
+            raise serializers.ValidationError("Choose only one: service or other_concern.")
+        return data
+
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

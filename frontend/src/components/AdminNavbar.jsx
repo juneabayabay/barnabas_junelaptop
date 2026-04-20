@@ -33,6 +33,7 @@ export default function AdminNavbar({ content }) {
     { name: 'Payments', path: '/admin/payments', icon: <PaymentIcon /> },
     { name: 'Patients', path: '/admin/patients', icon: <PeopleIcon /> },
     { name: 'Reports', path: '/admin/reports', icon: <BarChartIcon /> },
+    { name: 'Appointments', path: '/admin/appointments', icon: <BarChartIcon /> },
   ];
 
   return (

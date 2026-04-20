@@ -5,34 +5,79 @@
     align-items: center;
     justify-content: center;
     background-color: #f2f2f2;
+    padding: 10px; /* prevents content from touching edges on small screens */
+    box-sizing: border-box;
 }
 
 .whiteBox {
     background-color: white;
     padding: 20px;
-    min-width: 300px;
-    height: 70%;
+    min-width: 280px;
+    height: auto; /* let content define height */
     width: 25%;
     border: none;
     border-radius: 5%;
     box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
+/* Item container */
 .itemBox {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 20%;
+    min-height: 60px;
     padding: 5px;
 }
 
 .title {
     font-size: 30px;
-
+    text-align: center;
 }
 
 .myForm {
     width: 100%;
 }
 
+/* -------- Responsive Breakpoints -------- */
+
+/* Tablets */
+@media (max-width: 1024px) {
+    .whiteBox {
+        width: 50%;
+        padding: 15px;
+    }
+    .title {
+        font-size: 26px;
+    }
+}
+
+/* Large phones */
+@media (max-width: 768px) {
+    .whiteBox {
+        width: 70%;
+        padding: 15px;
+    }
+    .title {
+        font-size: 24px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+    .whiteBox {
+        width: 90%;
+        padding: 10px;
+        border-radius: 10px;
+    }
+    .title {
+        font-size: 20px;
+    }
+    .itemBox {
+        flex-direction: column; /* stack items vertically */
+        min-height: auto;
+    }
+}
