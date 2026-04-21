@@ -1,17 +1,30 @@
-import Box from '@mui/material/Box';
-import AppBar from '@mui/material/AppBar';
-import CssBaseline from '@mui/material/CssBaseline';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import Avatar from '@mui/material/Avatar';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import PersonIcon from '@mui/icons-material/Person';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import AxiosInstance from './AxiosInstance';
+// src/components/Navbar.jsx
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  CssBaseline,
+  Drawer,
+  Toolbar,
+  Typography,
+  Avatar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Button,
+  Divider,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import PersonIcon from "@mui/icons-material/Person";
+import HomeIcon from "@mui/icons-material/Home";
+import InfoIcon from "@mui/icons-material/Info";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import EventIcon from "@mui/icons-material/Event";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import AxiosInstance from "./AxiosInstance";
+
+const drawerWidthExpanded = 240;
+const drawerWidthCollapsed = 72;
 
 export default function Navbar({ content }) {
   const location = useLocation();
@@ -19,93 +32,132 @@ export default function Navbar({ content }) {
   const navigate = useNavigate();
 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
   const open = Boolean(anchorEl);
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
   const logoutUser = () => {
-    AxiosInstance.post(`logout/`, {})
-      .then(() => {
-        localStorage.removeItem('Token');
-        navigate('/');
-      });
+    AxiosInstance.post(`logout/`, {}).then(() => {
+      localStorage.removeItem("Token");
+      navigate("/");
+    });
   };
 
   const navItems = [
-    { name: 'Home', path: '/home/' },
-    { name: 'About', path: '/about/' },
-    { name: 'Services', path: '/services/' },
-    { name: 'Calendar', path: '/calendar/' },
-    { name: 'Appointment', path: '/appointment/' },
+    { name: "Home", path: "/home/", icon: <HomeIcon /> },
+    { name: "About", path: "/about/", icon: <InfoIcon /> },
+    { name: "Services", path: "/services/", icon: <MedicalServicesIcon /> },
+    { name: "Calendar", path: "/calendar/", icon: <CalendarMonthIcon /> },
+    //{ name: "Appointment", path: "/appointment/", icon: <EventIcon /> },
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" sx={{ bgcolor: '#ffffff' }}> {/* light teal */}
-        <Toolbar>
-          <Box sx={{ flexGrow: 1}}>
-            <Link to="/home">
-              <img 
-                src="/barnabaslogo.png" 
-                alt="Barnabas Logo" 
-                style={{height: '50px', cursor: 'pointer', marginTop: '10px'}}
-              />
-            </Link>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {navItems.map((item) => (
-              <Button
-                key={item.name}
-                component={Link}
-                to={item.path}
-                color="inherit"
-                sx={{
-                  fontWeight: path === item.path ? 'bold' : 'normal',
-                  borderBottom: path === item.path ? '2px solid white' : 'none',
-                  borderRadius: 0,
-                  color: '#2ca6a4'
-                }}
-                startIcon={item.icon}
-              >
-                {item.name}
-              </Button>
-            ))}
-
-            {/* Profile Avatar with Dropdown */}
-            <IconButton onClick={handleMenuOpen} sx={{ ml: 1 }}>
-              <Avatar 
-                sx={{ bgcolor: 'white', color: '#2ca6a4' }}
-              >
-                <PersonIcon />
-              </Avatar>
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
-                Profile
-              </MenuItem>
-              <MenuItem onClick={() => { handleMenuClose(); logoutUser(); }}>
-                Logout
-              </MenuItem>
-            </Menu>
-          </Box>
+      {/* Sidebar Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: collapsed ? drawerWidthCollapsed : drawerWidthExpanded,
+          flexShrink: 0,
+          [`& .MuiDrawer-paper`]: {
+            width: collapsed ? drawerWidthCollapsed : drawerWidthExpanded,
+            boxSizing: "border-box",
+            bgcolor: "#ffffff",
+            transition: "width 0.3s",
+          },
+        }}
+      >
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: collapsed ? "center" : "space-between",
+            alignItems: "center",
+            px: 2,
+          }}
+        >
+          {!collapsed && (
+            <img
+              src="/barnabaslogo.png"
+              alt="Barnabas Logo"
+              style={{ height: "40px", cursor: "pointer" }}
+              onClick={() => navigate("/home")}
+            />
+          )}
+          <IconButton onClick={() => setCollapsed(!collapsed)}>
+            <MenuIcon />
+          </IconButton>
         </Toolbar>
-      </AppBar>
+        <Divider />
+        <Box sx={{ flexGrow: 1 }}>
+          {navItems.map((item) => (
+            <Button
+              key={item.name}
+              component={Link}
+              to={item.path}
+              startIcon={item.icon}
+              sx={{
+                justifyContent: collapsed ? "center" : "flex-start",
+                px: collapsed ? 0 : 2,
+                py: 1.5,
+                width: "100%",
+                color: path === item.path ? "#2ca6a4" : "#555",
+                fontWeight: path === item.path ? "bold" : "normal",
+                borderRadius: 0,
+              }}
+            >
+              {!collapsed && item.name}
+            </Button>
+          ))}
+        </Box>
+        <Divider />
+        {/* Profile + Logout at bottom */}
+        <Box sx={{ p: 2, textAlign: "center" }}>
+          <IconButton onClick={handleMenuOpen}>
+            <Avatar sx={{ bgcolor: "white", color: "#2ca6a4" }}>
+              <PersonIcon />
+            </Avatar>
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "bottom", horizontal: "right" }}
+          >
+            <MenuItem
+              onClick={() => {
+                handleMenuClose();
+                navigate("/profile");
+              }}
+            >
+              Profile
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleMenuClose();
+                logoutUser();
+              }}
+            >
+              Logout
+            </MenuItem>
+          </Menu>
+        </Box>
+      </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          ml: collapsed ? `${drawerWidthCollapsed}px` : `${drawerWidthExpanded}px`,
+          transition: "margin-left 0.3s",
+        }}
+      >
+        <Toolbar />
         {content}
       </Box>
     </Box>

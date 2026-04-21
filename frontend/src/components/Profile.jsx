@@ -9,7 +9,7 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import AxiosInstance from "./AxiosInstance"; // your axios setup
+import AxiosInstance from "./AxiosInstance";
 import "./style/Profile.css";
 
 const Profile = () => {
@@ -22,11 +22,10 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user profile from backend
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await AxiosInstance.get("users/me/"); 
+        const response = await AxiosInstance.get("users/me/");
         setProfile(response.data);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -43,7 +42,7 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      await AxiosInstance.put("users/me/", profile); 
+      await AxiosInstance.put("users/me/", profile);
       alert("Profile updated successfully!");
       setEditing(false);
     } catch (error) {
@@ -58,12 +57,12 @@ const Profile = () => {
 
   return (
     <Box className="profile-container">
-      <Paper elevation={4} className="profile-card">
+      <Paper elevation={2} className="profile-card">
         <Typography variant="h5" className="profile-title">
           My Profile
         </Typography>
 
-        <Stack spacing={3}>
+        <Stack spacing={3} className="profile-fields">
           <TextField
             name="username"
             label="Username"
@@ -98,12 +97,8 @@ const Profile = () => {
           />
 
           {editing ? (
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSave}
-              >
+            <Stack direction="row" spacing={2} className="profile-actions">
+              <Button variant="contained" color="primary" onClick={handleSave}>
                 Save
               </Button>
               <Button
@@ -119,6 +114,7 @@ const Profile = () => {
               variant="contained"
               color="primary"
               onClick={() => setEditing(true)}
+              className="edit-btn"
             >
               Edit Profile
             </Button>

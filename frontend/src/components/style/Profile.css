@@ -1,41 +1,69 @@
-:root {
-  --teal-main: #2ca6a4;
-  --teal-dark: #1f7a78;
-  --teal-light: #eafaf9;
-}
-
+/* Container mimics Reddit's clean background */
 .profile-container {
   display: flex;
   justify-content: center;
-  padding: 100px 20px 60px; /* offset for fixed navbar */
-  background: var(--teal-light);
-  min-height: 100vh;
-  animation: fadeIn 1.2s ease-in-out;
-}
-
-.profile-card {
-  background: #fff;
   padding: 40px;
-  border-radius: 12px;
-  max-width: 600px;
+  background-color: #f6f7f8; /* Reddit-like light gray */
+  min-height: 100vh;
+}
+
+/* Card styling */
+.profile-card {
   width: 100%;
-  box-shadow: 0px 6px 12px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
+  max-width: 600px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 30px;
+  border: 1px solid #e0e0e0;
 }
 
-.profile-card:hover {
-  transform: translateY(-5px);
-}
-
+/* Title */
 .profile-title {
-  color: var(--teal-main);
-  font-size: 2rem;
   font-weight: bold;
   margin-bottom: 20px;
-  text-align: center;
+  color: #1a1a1b; /* Reddit dark text */
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Fields spacing */
+.profile-fields .MuiTextField-root {
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+/* Actions */
+.profile-actions {
+  margin-top: 10px;
+}
+
+/* Buttons */
+.edit-btn,
+.profile-actions button {
+  text-transform: none; /* Reddit-style lowercase buttons */
+  font-weight: 500;
+}
+
+.edit-btn {
+  background-color: #ff4500; /* Reddit orange */
+}
+
+.edit-btn:hover {
+  background-color: #e03d00;
+}
+
+.profile-actions .MuiButton-containedPrimary {
+  background-color: #ff4500;
+}
+
+.profile-actions .MuiButton-containedPrimary:hover {
+  background-color: #e03d00;
+}
+
+.profile-actions .MuiButton-outlinedSecondary {
+  border-color: #787c7e;
+  color: #787c7e;
+}
+
+.profile-actions .MuiButton-outlinedSecondary:hover {
+  border-color: #1a1a1b;
+  color: #1a1a1b;
 }

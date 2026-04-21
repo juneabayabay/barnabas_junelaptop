@@ -18,6 +18,7 @@ import Appointment from './components/Appointment'
 import AppointmentForm from './components/AppointmentForm'
 import AdminDashboard from './components/AdminDashboard'
 import AdminAppointments from './components/AdminAppointments'
+import AppointmentScheduler from './components/AppointmentScheduler'
 
 function App() {
   const location = useLocation();
@@ -66,7 +67,7 @@ function App() {
                   <Route path="profile/" element={<Profile />} />
                   <Route path="about/" element={<About />} />
                   <Route path="services/" element={<Services />} />
-                  <Route path='calendar/' element={<AdminAppointments/>} />
+                  <Route path='calendar/' element={<AppointmentScheduler/>} />
                   <Route path="appointment/" element={<AppointmentForm />} />
                 </Route>
               </Routes>

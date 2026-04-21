@@ -1,0 +1,153 @@
+/* General container */
+.appointment-calendar {
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+/* Calendar grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.day-cell {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  min-height: 80px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.day-cell:hover {
+  background: #eef6ff;
+}
+
+.day-cell.full {
+  background: #ffe5e5;
+  border-color: #ff9999;
+}
+
+.day-num {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.day-info {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Day view */
+.day-view {
+  margin-top: 20px;
+}
+
+.time-grid {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+}
+
+.time-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
+  min-height: 50px;
+}
+
+.time-slot.lunch {
+  background: #fdf2f2;
+  color: #999;
+  font-style: italic;
+}
+
+/* Appointment blocks */
+.appt-block {
+  flex: 1;
+  margin-left: 10px;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.appt-block strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.appt-block small {
+  display: block;
+  opacity: 0.8;
+}
+
+/* Status colors */
+.status-pending {
+  background: #fff8e1;
+  border: 1px solid #ffcc80;
+}
+
+.status-confirmed {
+  background: #e8f5e9;
+  border: 1px solid #81c784;
+}
+
+.status-denied,
+.status-cancelled {
+  background: #ffebee;
+  border: 1px solid #e57373;
+}
+
+.status-walkin {
+  background: #e3f2fd;
+  border: 1px solid #64b5f6;
+}
+
+.status-pencil {
+  background: #f3e5f5;
+  border: 1px solid #ba68c8;
+}
+
+.status-paid {
+  background: #f1f8e9;
+  border: 1px solid #aed581;
+}
+
+/* Buttons */
+button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  margin: 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+button:hover {
+  background: #1565c0;
+}
+
+button.deny-btn {
+  background: #d32f2f;
+}
+
+button.deny-btn:hover {
+  background: #b71c1c;
+}
+
+button.cancel-btn {
+  background: #f57c00;
+}
+
+button.cancel-btn:hover {
+  background: #ef6c00;
+}
