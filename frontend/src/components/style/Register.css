@@ -1,0 +1,606 @@
+/* src/components/style/Register.css */
+
+/* Reset and Base Styles */
+.register-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a5f5d 0%, #2ca6a4 50%, #3dbebc 100%);
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Animated Background Circles */
+.bg-animation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: floatAnimation 20s infinite ease-in-out;
+}
+
+.bg-circle-1 {
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  right: -200px;
+  animation-delay: 0s;
+  background: radial-gradient(circle, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+}
+
+.bg-circle-2 {
+  width: 500px;
+  height: 500px;
+  bottom: -150px;
+  left: -150px;
+  animation-delay: -3s;
+  background: radial-gradient(circle, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+}
+
+.bg-circle-3 {
+  width: 400px;
+  height: 400px;
+  top: 30%;
+  left: 15%;
+  animation-delay: -7s;
+  background: radial-gradient(circle, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+}
+
+.bg-circle-4 {
+  width: 350px;
+  height: 350px;
+  bottom: 20%;
+  right: 10%;
+  animation-delay: -12s;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+}
+
+.bg-circle-5 {
+  width: 250px;
+  height: 250px;
+  top: 60%;
+  left: 70%;
+  animation-delay: -5s;
+  background: radial-gradient(circle, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+}
+
+.bg-circle-6 {
+  width: 180px;
+  height: 180px;
+  top: 15%;
+  right: 25%;
+  animation-delay: -9s;
+  background: radial-gradient(circle, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+}
+
+@keyframes floatAnimation {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(20px, 30px) scale(1.02);
+  }
+}
+
+/* Floating Particles */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: floatParticle linear infinite;
+}
+
+@keyframes floatParticle {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* Main Container */
+.register-container {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  padding: 2rem !important;
+  margin-top: 64px; /* Account for navbar height */
+}
+
+/* Landscape Card */
+.landscape-card {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  background: transparent;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  animation: slideUpFade 0.6s ease-out;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Left Side - Form Side */
+.form-side {
+  flex: 1;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  animation: fadeInLeft 0.8s ease-out;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-title {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  color: #1a2a3a !important;
+  margin-bottom: 0.5rem !important;
+  text-align: center;
+}
+
+.form-subtitle {
+  font-size: 0.875rem !important;
+  color: #6c757d !important;
+  margin-bottom: 2rem !important;
+  text-align: center;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-field {
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.form-field:nth-child(1) { animation-delay: 0.1s; }
+.form-field:nth-child(2) { animation-delay: 0.2s; }
+.form-field:nth-child(3) { animation-delay: 0.3s; }
+.form-field:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sign Up Button */
+.signup-button {
+  background: linear-gradient(135deg, #2ca6a4 0%, #1a5f5d 100%) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  padding: 0.875rem !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.signup-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.signup-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.signup-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(44, 166, 164, 0.3);
+}
+
+.signup-button:active {
+  transform: translateY(0);
+}
+
+.signup-button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Login Prompt */
+.login-prompt {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.login-prompt a {
+  color: #2ca6a4;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.login-prompt a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #2ca6a4, #3dbebc);
+  transition: width 0.3s ease;
+}
+
+.login-prompt a:hover {
+  color: #1e7a78;
+}
+
+.login-prompt a:hover::after {
+  width: 100%;
+}
+
+/* Right Side - Dark Teal Branding */
+.branding-side {
+  flex: 1;
+  background: linear-gradient(135deg, #0d3d3b 0%, #1a5f5d 100%);
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInRight 0.8s ease-out;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.branding-side::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+  animation: rotateGlow 20s linear infinite;
+}
+
+@keyframes rotateGlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.branding-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.logo-wrapper {
+  margin-bottom: 2rem;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 rgba(255,255,255,0));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+  }
+}
+
+.brand-logo {
+  width: 80px;
+  height: auto;
+  filter: brightness(0) invert(1);
+}
+
+.brand-title {
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: white !important;
+  margin-bottom: 1rem !important;
+  letter-spacing: -0.5px;
+}
+
+.brand-tagline {
+  font-size: 0.95rem !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  line-height: 1.6 !important;
+  margin-bottom: 2rem !important;
+}
+
+.brand-features {
+  text-align: left;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: white;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateX(5px);
+  opacity: 1;
+}
+
+.feature-dot {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+/* Error Message */
+.error-message-wrapper {
+  margin-bottom: 1.5rem;
+  animation: shakeError 0.5s ease-in-out;
+}
+
+.error-message {
+  background: rgba(220, 53, 69, 0.95);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.error-progress {
+  height: 3px;
+  background: linear-gradient(90deg, #dc3545, #ff6b6b);
+  width: 100%;
+  animation: errorProgress 3s linear forwards;
+  border-radius: 2px;
+  margin-top: 8px;
+}
+
+@keyframes errorProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Footer */
+.register-footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .landscape-card {
+    flex-direction: column;
+    max-width: 500px;
+  }
+  
+  .form-side {
+    padding: 2rem;
+  }
+  
+  .branding-side {
+    padding: 2rem;
+  }
+  
+  .brand-title {
+    font-size: 1.5rem !important;
+  }
+  
+  .brand-logo {
+    width: 60px;
+  }
+  
+  .brand-features {
+    display: none;
+  }
+  
+  .register-container {
+    margin-top: 0;
+    min-height: calc(100vh - 60px);
+  }
+}
+
+@media (max-width: 768px) {
+  .register-container {
+    padding: 1rem !important;
+  }
+  
+  .landscape-card {
+    border-radius: 20px;
+  }
+  
+  .form-side {
+    padding: 1.5rem;
+  }
+  
+  .branding-side {
+    padding: 1.5rem;
+  }
+  
+  .form-title {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .landscape-card {
+    border-radius: 16px;
+  }
+  
+  .brand-title {
+    font-size: 1.25rem !important;
+  }
+  
+  .brand-tagline {
+    font-size: 0.85rem !important;
+  }
+  
+  .form-title {
+    font-size: 1.25rem !important;
+  }
+  
+  .form-subtitle {
+    font-size: 0.8rem !important;
+  }
+  
+  .signup-button {
+    font-size: 0.875rem !important;
+    padding: 0.75rem !important;
+  }
+}
+
+/* Input Focus Effects */
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #2ca6a4 !important;
+  border-width: 2px !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: #2ca6a4 !important;
+}
+
+/* Hover effect on inputs */
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #2ca6a4;
+}

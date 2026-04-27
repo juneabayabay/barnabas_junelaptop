@@ -5,6 +5,7 @@ import Login from './components/Login'
 import Register from './components/Register'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import AdminFooter from './components/AdminFooter'
 import AdminNavbar from './components/AdminNavbar'
 import About from './components/About'
 import Services from './components/Services'
@@ -19,6 +20,7 @@ import AppointmentForm from './components/AppointmentForm'
 import AdminDashboard from './components/AdminDashboard'
 import AdminAppointments from './components/AdminAppointments'
 import AppointmentScheduler from './components/AppointmentScheduler'
+import ExternalNavbar from './components/ExternalNavbar'
 
 function App() {
   const location = useLocation();
@@ -41,20 +43,30 @@ function App() {
   return (
     <>
       {noNavbar ? (
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/request/password_reset" element={<PasswordResetRequest />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/password_reset/:token" element={<PasswordReset />} />
-        </Routes>
+        <ExternalNavbar 
+          content={
+            <>
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/request/password_reset" element={<PasswordResetRequest />} />
+                <Route path="/admin" element={<AdminLogin />} />
+                <Route path="/password_reset/:token" element={<PasswordReset />} />
+              </Routes>
+              <Footer/>
+            </>
+          }
+        />
       ) : adminNavbar ? (
         <AdminNavbar
           content={
-            <Routes>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/appointments" element={<AdminAppointments />} />
-            </Routes>
+            <>
+              <Routes>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/appointments" element={<AdminAppointments />} />
+              </Routes>
+              <AdminFooter/>
+            </>
           }
         />
       ) : (

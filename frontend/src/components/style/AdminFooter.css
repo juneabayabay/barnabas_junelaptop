@@ -1,0 +1,556 @@
+/* src/components/style/AdminFooter.css */
+
+.admin-footer {
+  background: linear-gradient(135deg, #0a1a1f 0%, #0d2a2a 100%);
+  color: #e0e0e0;
+  margin-top: auto;
+  position: relative;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+/* Animated Border */
+.admin-footer-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    #2ca6a4 25%, 
+    #3dbebc 50%, 
+    #2ca6a4 75%, 
+    transparent 100%);
+  animation: borderSlide 3s linear infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes borderSlide {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.admin-footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Grid Layout */
+.admin-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Footer Sections */
+.admin-footer-section {
+  animation: adminFadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes adminFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-footer-section:nth-child(1) { animation-delay: 0.1s; }
+.admin-footer-section:nth-child(2) { animation-delay: 0.2s; }
+.admin-footer-section:nth-child(3) { animation-delay: 0.3s; }
+.admin-footer-section:nth-child(4) { animation-delay: 0.4s; }
+
+/* Logo Section */
+.admin-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-logo-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #2ca6a4, #1a5f5d);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-logo-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(44, 166, 164, 0.3);
+}
+
+.admin-logo-icon svg {
+  color: white;
+}
+
+.admin-footer-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.admin-footer-badge {
+  font-size: 0.7rem;
+  color: #2ca6a4;
+  margin: 0;
+  font-weight: 500;
+}
+
+.admin-footer-description {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+/* Stats */
+.admin-footer-stats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-stat {
+  flex: 1;
+  background: rgba(44, 166, 164, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(44, 166, 164, 0.2);
+}
+
+.admin-stat:hover {
+  transform: translateY(-2px);
+  background: rgba(44, 166, 164, 0.15);
+  border-color: rgba(44, 166, 164, 0.4);
+}
+
+.admin-stat-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2ca6a4;
+}
+
+.admin-stat-label {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+/* Section Titles */
+.admin-footer-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #ffffff;
+  position: relative;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+
+.admin-footer-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #2ca6a4, #3dbebc);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.admin-footer-section:hover .admin-footer-section-title::after {
+  width: 60px;
+}
+
+/* Admin Links */
+.admin-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-footer-links li {
+  margin-bottom: 0.75rem;
+}
+
+.admin-footer-links a {
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.admin-footer-links a::before {
+  content: '→';
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+}
+
+.admin-footer-links a:hover::before {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.admin-footer-links a:hover {
+  color: #2ca6a4;
+  transform: translateX(5px);
+}
+
+.admin-footer-links a.active {
+  color: #2ca6a4;
+  font-weight: 600;
+}
+
+/* System Status */
+.admin-system-status {
+  margin-bottom: 1rem;
+}
+
+.admin-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  padding: 0.25rem 0;
+  transition: all 0.3s ease;
+}
+
+.admin-status-item:hover {
+  transform: translateX(3px);
+}
+
+.admin-status-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.admin-status-dot.online {
+  background: #10b981;
+  box-shadow: 0 0 5px #10b981;
+  animation: adminPulse 2s infinite;
+}
+
+.admin-status-dot.active {
+  background: #f59e0b;
+  box-shadow: 0 0 5px #f59e0b;
+  animation: adminPulse 2s infinite;
+}
+
+.admin-status-dot.warning {
+  background: #ef4444;
+  box-shadow: 0 0 5px #ef4444;
+  animation: adminPulse 1.5s infinite;
+}
+
+@keyframes adminPulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.admin-status-text {
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+/* System Metrics */
+.admin-system-metrics {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-metric-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.admin-metric-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2ca6a4, #3dbebc);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-metric-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.admin-last-update {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Support Button */
+.admin-contact-support {
+  margin-top: 1rem;
+}
+
+.admin-support-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #2ca6a4, #1a5f5d);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-support-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.admin-support-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.admin-support-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(44, 166, 164, 0.4);
+}
+
+/* Footer Bottom */
+.admin-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-footer-copyright {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.admin-footer-copyright p {
+  margin: 0;
+}
+
+.admin-footer-license {
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  color: #4b5563;
+}
+
+.admin-footer-legal {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-footer-legal a {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.admin-footer-legal a:hover {
+  color: #2ca6a4;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .admin-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-footer-container {
+    padding: 2rem 1.5rem 1rem;
+  }
+
+  .admin-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .admin-footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .admin-footer-legal {
+    justify-content: center;
+  }
+
+  .admin-footer-section-title {
+    display: block;
+    text-align: center;
+  }
+
+  .admin-footer-section-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .admin-status-item {
+    justify-content: space-between;
+  }
+
+  .admin-footer-logo {
+    justify-content: center;
+  }
+
+  .admin-footer-stats {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-footer-container {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .admin-footer-legal {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .admin-footer-grid {
+    text-align: center;
+  }
+
+  .admin-footer-links a:hover::before {
+    display: none;
+  }
+
+  .admin-footer-links a:hover {
+    transform: translateX(0);
+  }
+
+  .admin-footer-stats {
+    flex-direction: column;
+  }
+  
+  .admin-stat {
+    width: 100%;
+  }
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Tooltip */
+[data-tooltip] {
+  position: relative;
+  cursor: pointer;
+}
+
+[data-tooltip]:before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #1a2a3a;
+  color: white;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+[data-tooltip]:hover:before {
+  opacity: 1;
+}

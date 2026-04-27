@@ -1,0 +1,255 @@
+/* src/components/style/ExternalNavbar.css */
+
+/* Logo Styles */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.logo-container::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -12px;
+  right: -12px;
+  bottom: -8px;
+  background: radial-gradient(circle, rgba(44, 166, 164, 0.1), transparent);
+  border-radius: 16px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.logo-container:hover::before {
+  opacity: 1;
+}
+
+.logo-container:hover {
+  transform: scale(1.02);
+}
+
+.navbar-logo {
+  height: 42px;
+  width: auto;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, #1a5f5d 0%, #2ca6a4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: all 0.3s ease;
+}
+
+.external-navbar.scrolled .logo-text {
+  background: linear-gradient(135deg, #144f4d 0%, #238a88 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Navigation Links */
+.nav-link {
+  position: relative;
+  transition: all 0.3s ease;
+  font-weight: 500 !important;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #2ca6a4, #3dbebc);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 80%;
+}
+
+.nav-link:hover {
+  transform: translateY(-1px);
+}
+
+/* Glass Effect for Navbar */
+.external-navbar {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Login Button */
+.btn-login {
+  border: 1.5px solid;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  backdrop-filter: blur(4px);
+}
+
+.btn-login:hover {
+  background: rgba(44, 166, 164, 0.1) !important;
+  border-color: #2ca6a4 !important;
+  box-shadow: 0 4px 12px rgba(44, 166, 164, 0.15);
+}
+
+/* Signup Button */
+.btn-signup {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-signup::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-signup:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Scroll Animation */
+.external-navbar {
+  transition: all 0.3s ease !important;
+}
+
+.external-navbar.scrolled {
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .logo-text {
+    display: none;
+  }
+  
+  .navbar-logo {
+    height: 36px;
+  }
+  
+  .btn-login,
+  .btn-signup {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .nav-link {
+    font-size: 0.85rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-login,
+  .btn-signup {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    font-size: 0.75rem !important;
+    min-width: auto !important;
+  }
+  
+  .nav-link {
+    font-size: 0.8rem !important;
+  }
+  
+  .navbar-logo {
+    height: 32px;
+  }
+}
+
+/* Remove default MUI button focus outline */
+.MuiButton-root:focus {
+  outline: none;
+}
+
+/* Ensure main content has no spacing */
+#root, 
+.MuiBox-root {
+  margin: 0;
+  padding: 0;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Active link styling */
+.nav-link.active {
+  font-weight: 600 !important;
+  position: relative;
+}
+
+/* Optional: Add gradient border on hover for glass effect */
+.external-navbar:hover {
+  border-bottom-color: rgba(44, 166, 164, 0.3);
+}
+
+/* Custom animation for logo on page load */
+@keyframes logoReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.logo-container {
+  animation: logoReveal 0.5s ease-out;
+}
+
+/* Animation for nav items */
+@keyframes navFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-link {
+  animation: navFadeIn 0.4s ease-out forwards;
+}
+
+.btn-login,
+.btn-signup {
+  animation: navFadeIn 0.5s ease-out forwards;
+}
+
+/* Stagger animation for nav items */
+.nav-item:nth-child(1) { animation-delay: 0.1s; }
+.nav-item:nth-child(2) { animation-delay: 0.2s; }
+.btn-login { animation-delay: 0.3s; }
+.btn-signup { animation-delay: 0.4s; }

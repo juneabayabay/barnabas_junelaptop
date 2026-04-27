@@ -1,0 +1,334 @@
+/* src/components/style/AppointmentCalendar.css */
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Main Container */
+.appointment-scheduler {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+/* Calendar Container */
+.calendar-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Day Cells */
+.calendar-day {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-day:hover:not(.disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.calendar-day.sunday {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border: 2px solid #ef9a9a;
+}
+
+.calendar-day.past {
+  background: #f5f5f5;
+  filter: grayscale(0.2);
+}
+
+.calendar-day.full {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 2px solid #ff9800;
+}
+
+.calendar-day.selected {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 2px solid #1976d2;
+  transform: scale(1.02);
+}
+
+/* Day Number */
+.day-number {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+/* Time Slots */
+.time-slots-container {
+  padding: 20px;
+}
+
+.time-slot-button {
+  transition: all 0.3s ease !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+}
+
+.time-slot-button:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.time-slot-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Service List */
+.service-item {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.service-item:hover {
+  background: linear-gradient(90deg, #f5f5f5 0%, #e0e0e0 100%);
+  transform: translateX(8px);
+}
+
+.service-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.service-price {
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 600px) {
+  .calendar-day {
+    min-height: 70px;
+    padding: 8px !important;
+  }
+  
+  .day-number {
+    font-size: 14px;
+  }
+  
+  .time-slot-button {
+    padding: 12px !important;
+  }
+  
+  .service-name {
+    font-size: 0.9rem;
+  }
+  
+  .service-price {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 960px) {
+  .calendar-day {
+    min-height: 90px;
+    padding: 12px !important;
+  }
+  
+  .day-number {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 961px) {
+  .calendar-day {
+    min-height: 130px;
+    padding: 16px !important;
+  }
+  
+  .day-number {
+    font-size: 18px;
+  }
+}
+
+/* Animations */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-enter {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.fade-exit {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+/* Success Animation */
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-toast {
+  animation: successPop 0.5s ease-out;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Stepper Customization */
+.MuiStepIcon-root.Mui-active {
+  color: #1976d2 !important;
+}
+
+.MuiStepIcon-root.Mui-completed {
+  color: #4caf50 !important;
+}
+
+/* Button Hover Effects */
+.btn-hover-effect {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-hover-effect:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-hover-effect:active:after {
+  width: 200px;
+  height: 200px;
+  opacity: 0;
+}
+
+/* Card Hover Effects */
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pulse Animation for Notifications */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse {
+  animation: pulse 1s ease-in-out;
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none;
+  }
+  
+  .calendar-day {
+    break-inside: avoid;
+    border: 1px solid #ddd;
+  }
+}

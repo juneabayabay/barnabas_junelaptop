@@ -1,0 +1,288 @@
+/* src/components/style/AdminNavbar.css */
+
+/* RESET */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================
+   DRAWER
+========================= */
+.admin-drawer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #071518 0%, #0d2a2a 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar */
+.admin-drawer::-webkit-scrollbar {
+  width: 0;
+}
+.admin-drawer {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* =========================
+   HEADER
+========================= */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0;
+  min-height: 56px;
+}
+
+/* Buttons */
+.desktop-hamburger-btn,
+.mobile-drawer-close-btn {
+  color: #94a3b8 !important;
+  transition: all 0.2s ease !important;
+  padding: 6px !important;
+}
+
+.desktop-hamburger-btn:hover,
+.mobile-drawer-close-btn:hover {
+  color: #2ca6a4 !important;
+  background-color: rgba(44, 166, 164, 0.12) !important;
+}
+
+/* =========================
+   DIVIDER
+========================= */
+.drawer-divider {
+  background-color: rgba(44, 166, 164, 0.12);
+  margin: 6px 10px;
+}
+
+/* =========================
+   NAV LIST
+========================= */
+.nav-list {
+  flex: 1;
+  padding: 6px 6px;
+}
+
+.nav-list-user {
+  padding: 4px 6px;
+}
+
+.nav-list-bottom {
+  padding: 4px 6px 10px;
+}
+
+/* =========================
+   NAV ITEM
+========================= */
+.nav-item {
+  margin-bottom: 2px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* =========================
+   NAV BUTTON
+========================= */
+.nav-button {
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  position: relative;
+  color: #cbd5f5;
+}
+
+.nav-button:hover {
+  background-color: rgba(44, 166, 164, 0.12);
+}
+
+.nav-button.active {
+  background: rgba(44, 166, 164, 0.18);
+}
+
+/* Left indicator */
+.nav-button.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  background: #2ca6a4;
+  border-radius: 0 3px 3px 0;
+}
+
+/* =========================
+   ICON
+========================= */
+.nav-icon {
+  color: #94a3b8;
+  transition: 0.2s;
+  min-width: 32px;
+}
+
+.nav-icon svg {
+  font-size: 20px;
+}
+
+.nav-icon.active {
+  color: #2ca6a4;
+}
+
+.nav-button:hover .nav-icon {
+  color: #2ca6a4;
+}
+
+/* =========================
+   TEXT
+========================= */
+.nav-text {
+  color: #d1d5db;
+  transition: 0.2s;
+}
+
+.nav-text.active {
+  color: #2ca6a4;
+}
+
+.nav-button:hover .nav-text {
+  color: #2ca6a4;
+}
+
+/* =========================
+   LOGOUT
+========================= */
+.logout-icon {
+  color: #ef4444;
+}
+
+.logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+}
+
+/* =========================
+   DESKTOP COLLAPSE
+========================= */
+.desktop-drawer.collapsed .MuiDrawer-paper {
+  width: 68px;
+}
+
+.desktop-drawer.collapsed .nav-text {
+  display: none;
+}
+
+.desktop-drawer.collapsed .nav-button {
+  justify-content: center;
+  padding: 8px !important;
+}
+
+.desktop-drawer.collapsed .nav-icon {
+  min-width: auto;
+}
+
+/* =========================
+   APP BAR
+========================= */
+.admin-appbar {
+  background: #0d2a2a;
+  border-bottom: 1px solid rgba(44, 166, 164, 0.2);
+}
+
+.menu-button {
+  color: #2ca6a4 !important;
+}
+
+.menu-button:hover {
+  background-color: rgba(44, 166, 164, 0.1);
+}
+
+.appbar-title {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   MAIN CONTENT (IMPORTANT FIX)
+========================= */
+.admin-main-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* remove spacing from children */
+.admin-main-content > * {
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* =========================
+   MENUS
+========================= */
+.notification-menu .MuiMenuItem-root,
+.profile-menu .MuiMenuItem-root {
+  padding: 10px 16px;
+  font-size: 0.85rem;
+}
+
+/* =========================
+   TOOLTIP
+========================= */
+.MuiTooltip-tooltip {
+  background-color: #2ca6a4;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* =========================
+   SCROLLBAR (SUBTLE)
+========================= */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(44, 166, 164, 0.35);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 600px) {
+  .drawer-header {
+    padding: 10px 0;
+    min-height: 48px;
+  }
+
+  .nav-button {
+    padding: 6px 10px !important;
+    min-height: 36px !important;
+  }
+
+  .nav-icon svg {
+    font-size: 18px;
+  }
+}
+
+/* =========================
+   ANIMATION
+========================= */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
