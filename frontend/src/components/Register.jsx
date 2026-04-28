@@ -45,11 +45,13 @@ const Register = () => {
         setLoading(true)
         setErrorMessage('')
         
+        // Only send username, email, and password to the backend
+        // Remove password2 as it's only for frontend validation
         AxiosInstance.post(`register/`, {
             username: data.username,
             email: data.email,
             password: data.password,
-            password2: data.password2,
+            // password2 is NOT sent to backend - it's only for frontend validation
         })
         .then(() => {
             navigate('/')
@@ -58,15 +60,22 @@ const Register = () => {
             setLoading(false)
             const errorData = error.response?.data
             if (errorData) {
-                if (errorData.email) {
-                    setError('email', { message: errorData.email[0] })
-                    setErrorMessage(errorData.email[0])
-                } else if (errorData.username) {
-                    setError('username', { message: errorData.username[0] })
-                    setErrorMessage(errorData.username[0])
-                } else if (errorData.password) {
-                    setError('password', { message: errorData.password[0] })
-                    setErrorMessage(errorData.password[0])
+                // Handle nested error structure from Django REST framework
+                if (typeof errorData === 'object') {
+                    if (errorData.email) {
+                        setError('email', { message: Array.isArray(errorData.email) ? errorData.email[0] : errorData.email })
+                        setErrorMessage(Array.isArray(errorData.email) ? errorData.email[0] : errorData.email)
+                    } else if (errorData.username) {
+                        setError('username', { message: Array.isArray(errorData.username) ? errorData.username[0] : errorData.username })
+                        setErrorMessage(Array.isArray(errorData.username) ? errorData.username[0] : errorData.username)
+                    } else if (errorData.password) {
+                        setError('password', { message: Array.isArray(errorData.password) ? errorData.password[0] : errorData.password })
+                        setErrorMessage(Array.isArray(errorData.password) ? errorData.password[0] : errorData.password)
+                    } else if (errorData.non_field_errors) {
+                        setErrorMessage(Array.isArray(errorData.non_field_errors) ? errorData.non_field_errors[0] : errorData.non_field_errors)
+                    } else {
+                        setErrorMessage('Registration failed. Please try again.')
+                    }
                 } else {
                     setErrorMessage('Registration failed. Please try again.')
                 }

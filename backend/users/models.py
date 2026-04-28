@@ -11,6 +11,10 @@ from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+from celery import shared_task
+from django.core.mail import send_mail
+from .ai_service import AIDentalScheduler
+
 
 User = settings.AUTH_USER_MODEL
 
@@ -36,6 +40,7 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
     firstname = models.CharField(max_length=150, null=True, blank=True)
+    middlename = models.CharField(max_length=150, null=True, blank=True)
     lastname = models.CharField(max_length=150, null=True, blank=True)
     email = models.EmailField(unique=True)
     birthday = models.DateField(null=True, blank=True)
@@ -76,11 +81,16 @@ def password_reset_token_created(reset_password_token, *args, **kwargs):
     msg.attach_alternative(html_message, 'text/html')
     msg.send()
 
+# models.py
+
 class Appointment(models.Model):
     STATUS_CHOICES = [
+        ('pencil', 'Pencil Booking'),
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
         ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+        ('waiting', 'Waiting List'),
     ]
 
     user = models.ForeignKey(
@@ -97,301 +107,242 @@ class Appointment(models.Model):
         choices=STATUS_CHOICES,
         default='pending'
     )
+    pencil_expires_at = models.DateTimeField(null=True, blank=True)
+    waitlist_position = models.IntegerField(null=True, blank=True)
+    ai_suggestion = models.TextField(blank=True, null=True)
+    preferred_time = models.CharField(max_length=50, blank=True, null=True)
+    urgency_level = models.IntegerField(
+        default=1, 
+        choices=[(1, 'Low'), (2, 'Medium'), (3, 'High')]
+    )
+    notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'time']
+        indexes = [
+            models.Index(fields=['user', 'date', 'status']),
+            models.Index(fields=['date', 'time', 'status']),
+            models.Index(fields=['status', 'waitlist_position']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.date} {self.time} ({self.status})"
 
-
-"""
-class DentalService(models.Model):
-    class DurationType(models.IntegerChoices):
-        ONE_HOUR = 60, '1 Hour'
-        THREE_HOURS = 180, '3 Hours'
-
-    name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
-    description = models.TextField(blank=True)
-    duration_minutes = models.IntegerField(choices=DurationType.choices, default=DurationType.ONE_HOUR)
-    base_price = models.DecimalField(max_digits=10, decimal_places=2)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.name} ({self.duration_minutes}min)"
-
-    class Meta:
-        ordering = ['name']
-
-class PatientProfile(models.Model):
-    class BloodType(models.TextChoices):
-        A_POS = 'A+', 'A+'
-        A_NEG = 'A-', 'A-'
-        B_POS = 'B+', 'B+'
-        B_NEG = 'B-', 'B-'
-        AB_POS = 'AB+', 'AB+'
-        AB_NEG = 'AB-', 'AB-'
-        O_POS = 'O+', 'O+'
-        O_NEG = 'O-', 'O-'
-        UNKNOWN = 'Unknown', 'Unknown'
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
-    patient_number = models.CharField(max_length=20, unique=True, blank=True)
-    blood_type = models.CharField(max_length=10, choices=BloodType.choices, default=BloodType.UNKNOWN)
-    allergies = models.TextField(blank=True)
-    medical_history = models.TextField(blank=True)
-    emergency_contact_name = models.CharField(max_length=100, blank=True)
-    emergency_contact_phone = models.CharField(max_length=20, blank=True)
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.patient_number:
-            last = PatientProfile.objects.order_by('-created_at').first()
-            count = (int(last.patient_number.replace('P', '')) + 1) if last and last.patient_number else 1
-            self.patient_number = f"P{count:05d}"
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.patient_number} - {self.user.get_full_name()}"
-
-class TimeSlot(models.Model):
-    date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    is_available = models.BooleanField(default=True)
-
-    class Meta:
-        unique_together = ['date', 'start_time']
-        ordering = ['date', 'start_time']
-
-    def __str__(self):
-        return f"{self.date} {self.start_time}-{self.end_time}"
-
-
-class Appointment(models.Model):
-    class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        CONFIRMED = 'confirmed', 'Confirmed'
-        CANCELLED = 'cancelled', 'Cancelled'
-        COMPLETED = 'completed', 'Completed'
-        NO_SHOW = 'no_show', 'No Show'
-        RESCHEDULED = 'rescheduled', 'Rescheduled'
-
-    class BookingType(models.TextChoices):
-        REGULAR = 'regular', 'Regular'
-        PENCIL = 'pencil', 'Pencil Booking'
-        WAITLIST = 'waitlist', 'Waitlist'
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='appointments')
-    service = models.ForeignKey(DentalService, on_delete=models.PROTECT)
-    date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-    booking_type = models.CharField(max_length=20, choices=BookingType.choices, default=BookingType.REGULAR)
-
-    # Pencil booking: auto-expires after 6 hours if not confirmed
-    pencil_expires_at = models.DateTimeField(null=True, blank=True)
-    pencil_confirmed = models.BooleanField(default=False)
-
-    # Cancellation info
-    cancelled_by = models.ForeignKey(
-        User, null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='cancelled_appointments'
+class Waitlist(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='waitlist_entries'
     )
-    cancelled_at = models.DateTimeField(null=True, blank=True)
-    cancellation_reason = models.TextField(blank=True)
-
-    # No-show tracking
-    no_show_marked_at = models.DateTimeField(null=True, blank=True)
-    no_show_count = models.IntegerField(default=0)
-
-    # Admin confirmation
-    confirmed_by = models.ForeignKey(
-        User, null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='confirmed_appointments'
-    )
-    confirmed_at = models.DateTimeField(null=True, blank=True)
-
-    notes = models.TextField(blank=True)
-    admin_notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['date', 'start_time']
-
-    def save(self, *args, **kwargs):
-        if self.booking_type == self.BookingType.PENCIL and not self.pencil_expires_at:
-            self.pencil_expires_at = timezone.now() + timedelta(hours=6)
-        super().save(*args, **kwargs)
-
-    @property
-    def is_pencil_expired(self):
-        if self.booking_type == self.BookingType.PENCIL and self.pencil_expires_at:
-            return timezone.now() > self.pencil_expires_at and not self.pencil_confirmed
-        return False
-
-    def mark_no_show(self):
-        self.status = self.Status.NO_SHOW
-        self.no_show_marked_at = timezone.now()
-        self.no_show_count += 1
-        self.save()
-
-    def __str__(self):
-        return f"{self.patient.get_full_name()} - {self.service.name} on {self.date}"
-
-
-class WaitlistEntry(models.Model):
-    class Status(models.TextChoices):
-        WAITING = 'waiting', 'Waiting'
-        NOTIFIED = 'notified', 'Notified'
-        BOOKED = 'booked', 'Booked'
-        EXPIRED = 'expired', 'Expired'
-
-    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='waitlist_entries')
-    service = models.ForeignKey(DentalService, on_delete=models.PROTECT)
     preferred_date = models.DateField()
-    preferred_time_start = models.TimeField(null=True, blank=True)
-    preferred_time_end = models.TimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.WAITING)
-    notes = models.TextField(blank=True)
-    notified_at = models.DateTimeField(null=True, blank=True)
+    preferred_time_start = models.TimeField()
+    preferred_time_end = models.TimeField()
+    service_needed = models.CharField(max_length=255)
+    urgency_level = models.IntegerField(
+        choices=[(1, 'Low'), (2, 'Medium'), (3, 'High')],
+        default=1
+    )
+    status = models.CharField(
+        max_length=20, 
+        default='active',
+        choices=[('active', 'Active'), ('notified', 'Notified'), ('booked', 'Booked')]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
-        ordering = ['created_at']
+        ordering = ['-urgency_level', 'created_at']
+        indexes = [
+            models.Index(fields=['status', 'urgency_level']),
+            models.Index(fields=['preferred_date', 'status']),
+        ]
 
     def __str__(self):
-        return f"Waitlist: {self.patient.get_full_name()} for {self.service.name} on {self.preferred_date}"
+        return f"{self.user.username} - {self.preferred_date} (Urgency: {self.get_urgency_level_display()})"
 
-class Invoice(models.Model):
-    class Status(models.TextChoices):
-        DRAFT = 'draft', 'Draft'
-        SENT = 'sent', 'Sent'
-        PAID = 'paid', 'Paid'
-        OVERDUE = 'overdue', 'Overdue'
-        CANCELLED = 'cancelled', 'Cancelled'
+class AISuggestion(models.Model):
+    SUGGESTION_TYPES = [
+        ('time_optimization', 'Time Optimization'),
+        ('service_recommendation', 'Service Recommendation'),
+        ('cancellation_risk', 'Cancellation Risk'),
+        ('trending_services', 'Trending Services'),
+        ('waitlist_opportunity', 'Waitlist Opportunity'),
+        ('reminder', 'Reminder'),
+    ]
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    invoice_number = models.CharField(max_length=20, unique=True, blank=True)
-    patient = models.ForeignKey(User, on_delete=models.PROTECT, related_name='invoices')
-    appointment = models.OneToOneField(
-        Appointment, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='invoice'
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='ai_suggestions'
     )
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    notes = models.TextField(blank=True)
-    due_date = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.invoice_number:
-            last = Invoice.objects.order_by('-created_at').first()
-            count = (int(last.invoice_number.replace('INV-', '')) + 1) if last and last.invoice_number else 1
-            self.invoice_number = f"INV-{count:06d}"
-        self.total = self.subtotal - self.discount + self.tax
-        super().save(*args, **kwargs)
-
-
-class InvoiceItem(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
-    description = models.CharField(max_length=255)
-    quantity = models.IntegerField(default=1)
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def save(self, *args, **kwargs):
-        self.total = self.quantity * self.unit_price
-        super().save(*args, **kwargs)
-
-
-class Payment(models.Model):
-    class Method(models.TextChoices):
-        CASH = 'cash', 'Cash'
-        GCASH = 'gcash', 'GCash'
-        CARD = 'card', 'Credit/Debit Card'
-        BANK = 'bank_transfer', 'Bank Transfer'
-        MAYA = 'maya', 'Maya'
-
-    class Status(models.TextChoices):
-        PENDING = 'pending', 'Pending'
-        COMPLETED = 'completed', 'Completed'
-        FAILED = 'failed', 'Failed'
-        REFUNDED = 'refunded', 'Refunded'
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name='payments')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    method = models.CharField(max_length=30, choices=Method.choices)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-    reference_number = models.CharField(max_length=100, blank=True)
-    received_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True
-    )
-    paid_at = models.DateTimeField(null=True, blank=True)
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-class Notification(models.Model):
-    class NotifType(models.TextChoices):
-        APPOINTMENT_NEW = 'appointment_new', 'New Appointment'
-        APPOINTMENT_CONFIRMED = 'appointment_confirmed', 'Appointment Confirmed'
-        APPOINTMENT_CANCELLED = 'appointment_cancelled', 'Appointment Cancelled'
-        APPOINTMENT_REMINDER = 'appointment_reminder', 'Appointment Reminder'
-        WAITLIST_AVAILABLE = 'waitlist_available', 'Slot Available'
-        PENCIL_EXPIRING = 'pencil_expiring', 'Pencil Booking Expiring'
-        PENCIL_EXPIRED = 'pencil_expired', 'Pencil Booking Expired'
-        PAYMENT_RECEIVED = 'payment_received', 'Payment Received'
-        NO_SHOW = 'no_show', 'No Show Marked'
-
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    notif_type = models.CharField(max_length=40, choices=NotifType.choices)
-    title = models.CharField(max_length=200)
-    message = models.TextField()
-    data = models.JSONField(default=dict, blank=True)  # Extra payload (appointment_id, etc.)
+    suggestion_type = models.CharField(max_length=50, choices=SUGGESTION_TYPES)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    priority = models.IntegerField(default=1)
     is_read = models.BooleanField(default=False)
-    read_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-priority', '-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['suggestion_type', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
+
+class BookingReservation(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reservations'
+    )
+    token = models.CharField(max_length=100, unique=True)
+    date = models.DateField()
+    time = models.TimeField()
+    service = models.CharField(max_length=255, blank=True, null=True)
+    expires_at = models.DateTimeField()
+    is_confirmed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
-
-class AuditLog(models.Model):
-    class Action(models.TextChoices):
-        CREATE = 'create', 'Created'
-        UPDATE = 'update', 'Updated'
-        DELETE = 'delete', 'Deleted'
-        LOGIN = 'login', 'Logged In'
-        LOGOUT = 'logout', 'Logged Out'
-        CONFIRM = 'confirm', 'Confirmed'
-        CANCEL = 'cancel', 'Cancelled'
-        EXPORT = 'export', 'Exported'
-        VIEW = 'view', 'Viewed'
-
-    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    action = models.CharField(max_length=20, choices=Action.choices)
-    model_name = models.CharField(max_length=100)
-    object_id = models.CharField(max_length=100, blank=True)
-    object_repr = models.CharField(max_length=255, blank=True)
-    changes = models.JSONField(default=dict, blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['token', 'is_confirmed']),
+            models.Index(fields=['expires_at']),
+        ]
 
     def __str__(self):
-        return f"{self.actor} {self.action} {self.model_name} at {self.timestamp}"
-"""
+        return f"{self.user.username} - {self.token} ({self.expires_at})"
+
+@shared_task
+def expire_pencil_booking(appointment_id):
+    """Auto-expire pencil bookings after 15 minutes"""
+    try:
+        appointment = Appointment.objects.get(id=appointment_id, status='pencil')
+        if appointment.pencil_expires_at < timezone.now():
+            appointment.status = 'cancelled'
+            appointment.save()
+            
+            # Notify user
+            send_mail(
+                'Pencil Booking Expired',
+                f'Your pencil booking for {appointment.date} at {appointment.time} has expired.',
+                'noreply@dentalclinic.com',
+                [appointment.user.email],
+                fail_silently=True,
+            )
+    except Appointment.DoesNotExist:
+        pass
+
+def generate_all_slots():
+    """
+    Generate all possible appointment slots for a clinic day.
+    Clinic hours: 9:00 AM to 6:00 PM
+    Lunch break: 12:00 PM to 1:00 PM
+    Slot length: 30 minutes
+    """
+    from datetime import datetime, time, timedelta
+
+    slots = []
+    start_time = datetime.combine(datetime.today(), time(9, 0))
+    end_time = datetime.combine(datetime.today(), time(18, 0))
+
+    current = start_time
+    while current < end_time:
+        # Skip lunch break
+        if current.time().hour == 12:
+            current += timedelta(hours=1)
+            continue
+
+        slots.append({
+            "hour": current.time().hour,
+            "minute": current.time().minute,
+            "time": current.strftime("%H:%M")
+        })
+        current += timedelta(minutes=30)
+
+    return slots
+
+@shared_task
+def check_waitlist_for_slots():
+    """Periodically check if waitlist users can be matched with open slots"""
+    # Get all available slots for next 7 days
+    from datetime import datetime, timedelta
+    
+    for days_ahead in range(7):
+        check_date = timezone.now().date() + timedelta(days=days_ahead)
+        
+        # Get all appointments for this date
+        appointments = Appointment.objects.filter(
+            date=check_date,
+            status__in=['confirmed', 'pending']
+        )
+        
+        booked_slots = set([(apt.time.hour, apt.time.minute) for apt in appointments])
+        all_slots = generate_all_slots()  # Generate all possible slots
+        
+        available_slots = [slot for slot in all_slots if slot not in booked_slots]
+        
+        # Check waitlist users
+        waitlist_users = Waitlist.objects.filter(
+            preferred_date=check_date,
+            status='active'
+        ).order_by('-urgency_level', 'created_at')
+        
+        for user in waitlist_users:
+            matching_slots = []
+            for slot in available_slots:
+                slot_time = datetime.strptime(slot['time'], '%H:%M').time()
+                if user.preferred_time_start <= slot_time <= user.preferred_time_end:
+                    matching_slots.append(slot)
+            
+            if matching_slots:
+                # Notify user
+                AISuggestion.objects.create(
+                    user=user.user,
+                    suggestion_type='waitlist_match',
+                    title='Waitlist Match Found!',
+                    description=f'A slot has opened on {check_date}. Book now!',
+                    priority=user.urgency_level
+                )
+
+@shared_task
+def generate_ai_recommendations():
+    """Generate AI recommendations for all users"""
+    users = User.objects.filter(is_active=True)
+    
+    for user in users:
+        user_appointments = Appointment.objects.filter(user=user)
+        
+        # Generate time optimization suggestion
+        patterns = AIDentalScheduler.analyze_booking_patterns(user_appointments)
+        if patterns and patterns.get('preferred_time'):
+            AISuggestion.objects.create(
+                user=user,
+                suggestion_type='time_optimization',
+                title='Optimal Booking Time',
+                description=f"Based on your history, {patterns['preferred_time']}:00 works best for you.",
+                priority=1
+            )
+        
+        # Check for upcoming appointments
+        upcoming = Appointment.objects.filter(
+            user=user,
+            date__gt=timezone.now().date(),
+            status='pending'
+        ).first()
+        
+        if upcoming:
+            risk = AIDentalScheduler.predict_cancellation_risk(upcoming)
+            if risk['risk_score'] > 50:
+                AISuggestion.objects.create(
+                    user=user,
+                    suggestion_type='cancellation_risk',
+                    title='Appointment Risk Alert',
+                    description=f"Your appointment has a {risk['risk_score']}% cancellation risk.",
+                    priority=2
+                )

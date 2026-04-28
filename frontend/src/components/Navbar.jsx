@@ -24,24 +24,9 @@ export default function Navbar({ content }) {
   const location = useLocation();
   const path = location.pathname;
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const open = Boolean(anchorEl);
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -92,16 +77,15 @@ export default function Navbar({ content }) {
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <CssBaseline />
       
-      {/* Navbar with Transparent Glass Effect */}
+      {/* Navbar with Dark Transparent Glass Effect - No transition */}
       <AppBar
         position="fixed"
-        className={`navbar ${scrolled ? 'scrolled' : ''} ${mobileMenuOpen ? 'menu-open' : ''}`}
+        className="navbar"
         sx={{
-          bgcolor: "transparent",
-          boxShadow: "none",
+          background: "rgba(26, 42, 58, 0.85) !important",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          transition: "all 0.3s ease",
+          boxShadow: "none",
           borderBottom: "1px solid rgba(44, 166, 164, 0.15)",
         }}
       >
@@ -213,9 +197,9 @@ export default function Navbar({ content }) {
               </Menu>
             </Box>
 
-            {/* Mobile Menu Button - Only visible on mobile/tablet */}
+            {/* Hamburger Menu Button - Only visible on mobile/tablet */}
             <MuiIconButton 
-              className={`mobile-menu-btn ${mobileMenuOpen ? 'active' : ''}`}
+              className="mobile-menu-btn"
               onClick={toggleMobileMenu}
               sx={{ 
                 display: { xs: 'flex', md: 'none' },
@@ -223,7 +207,7 @@ export default function Navbar({ content }) {
                 zIndex: 1201,
               }}
             >
-              {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+              <MenuIcon />
             </MuiIconButton>
           </Toolbar>
         </Container>
@@ -231,6 +215,26 @@ export default function Navbar({ content }) {
 
       {/* Mobile Navigation Drawer */}
       <Box className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
+        {/* Close button inside drawer */}
+        <MuiIconButton 
+          className="mobile-close-btn"
+          onClick={closeMobileMenu}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            color: '#1a5f5d',
+            zIndex: 1202,
+            backgroundColor: 'rgba(44, 166, 164, 0.1)',
+            '&:hover': {
+              backgroundColor: 'rgba(44, 166, 164, 0.2)',
+              transform: 'rotate(90deg)',
+            }
+          }}
+        >
+          <CloseIcon />
+        </MuiIconButton>
+
         <Box className="mobile-nav-content">
           {/* Mobile Avatar Section */}
           <Box className="mobile-avatar-section">
@@ -257,7 +261,6 @@ export default function Navbar({ content }) {
                 className={`mobile-nav-link ${isActive(item.path) ? 'active' : ''}`}
                 onClick={closeMobileMenu}
                 fullWidth
-                startIcon={null}
               >
                 {item.name}
               </Button>
