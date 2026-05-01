@@ -117,10 +117,18 @@ const Home = () => {
   return (
     <>
       {/* Chatbot widget */}
-      <BubbleChat 
+      <BubbleChat
         chatflowid="858c65f1-8b77-4dc6-9db3-ef7e94906a2"
         apiHost="http://localhost:3001"
+        style={{
+          backgroundColor: "#003333",   // dark teal background
+          color: "#E0F2F1",             // light teal text
+          borderRadius: "8px",
+          padding: "12px",
+          fontFamily: "Arial, sans-serif"
+        }}
       />
+
 
       {/* Scroll to Top Button */}
       <Fab 

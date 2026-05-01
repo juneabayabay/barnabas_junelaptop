@@ -829,3 +829,10 @@ p {
 .MuiContainer-root {
   max-width: 1280px !important;
 }
+
+.bubble-chat {
+  background-color: #004d4d; /* dark teal */
+  color: #e0f2f1;           /* light teal */
+  border-radius: 8px;
+  padding: 12px;
+}
