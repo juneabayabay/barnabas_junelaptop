@@ -116,18 +116,6 @@ const Home = () => {
 
   return (
     <>
-      {/* Chatbot widget */}
-      <BubbleChat
-        chatflowid="858c65f1-8b77-4dc6-9db3-ef7e94906a2"
-        apiHost="http://localhost:3001"
-        style={{
-          backgroundColor: "#003333",   // dark teal background
-          color: "#E0F2F1",             // light teal text
-          borderRadius: "8px",
-          padding: "12px",
-          fontFamily: "Arial, sans-serif"
-        }}
-      />
 
 
       {/* Scroll to Top Button */}
@@ -443,37 +431,7 @@ const Home = () => {
         </Container>
       </Box>
 
-      {/* Footer Contact Info */}
-      <Box className="contact-info-section">
-        <Container maxWidth="lg">
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={3}>
-              <Box className="contact-item fade-up">
-                <LocationOnIcon className="contact-icon" />
-                <Typography variant="body2">123 Dental Street, Medical District</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Box className="contact-item fade-up" style={{ animationDelay: '0.1s' }}>
-                <PhoneIcon className="contact-icon" />
-                <Typography variant="body2">(555) 123-4567</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Box className="contact-item fade-up" style={{ animationDelay: '0.2s' }}>
-                <EmailIcon className="contact-icon" />
-                <Typography variant="body2">info@barnabasdental.com</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Box className="contact-item fade-up" style={{ animationDelay: '0.3s' }}>
-                <AccessTimeIcon className="contact-icon" />
-                <Typography variant="body2">Mon-Fri: 9AM-6PM | Sat: 9AM-2PM</Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+    
     </>
   )
 }

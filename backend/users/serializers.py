@@ -3,13 +3,33 @@ from .models import *
 from django.conf import settings
 from django.contrib.auth import get_user_model, authenticate
 from datetime import timedelta, date, datetime
+from django.utils import timezone
+
 User = get_user_model()
 
-# serializers.py
-from rest_framework import serializers
-from django.utils import timezone
-from datetime import datetime, timedelta
-from .models import Appointment, Waitlist, AISuggestion, BookingReservation
+
+class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'firstname', 'lastname', 'middlename', 
+                  'phone_number', 'role', 'is_staff', 'is_superuser', 'full_name', 
+                  'profile_picture', 'date_joined']
+        read_only_fields = ['id', 'date_joined']
+    
+    def get_full_name(self, obj):
+        return obj.full_name
+
+
+class PatientRecordSerializer(serializers.ModelSerializer):
+    user_details = UserSerializer(source='user', read_only=True)
+    
+    class Meta:
+        model = PatientRecord
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
 
 class AppointmentSerializer(serializers.ModelSerializer):
     user_username = serializers.ReadOnlyField(source='user.username')
@@ -17,15 +37,15 @@ class AppointmentSerializer(serializers.ModelSerializer):
     formatted_date = serializers.SerializerMethodField()
     formatted_time = serializers.SerializerMethodField()
     time_until_expiry = serializers.SerializerMethodField()
+    dentist_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Appointment
         fields = [
-            'id', 'user', 'user_username', 'user_email', 'date', 'time',
-            'service', 'other_concern', 'status', 'pencil_expires_at',
-            'waitlist_position', 'ai_suggestion', 'preferred_time',
-            'urgency_level', 'notes', 'created_at', 'updated_at',
-            'formatted_date', 'formatted_time', 'time_until_expiry'
+            'id', 'user', 'user_username', 'user_email', 'dentist', 'dentist_name',
+            'date', 'time', 'service', 'other_concern', 'status', 'pencil_expires_at',
+            'waitlist_position', 'ai_suggestion', 'urgency_level', 'notes', 'prescription',
+            'created_at', 'updated_at', 'formatted_date', 'formatted_time', 'time_until_expiry'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'pencil_expires_at']
     
@@ -42,11 +62,15 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 return int(remaining // 60)
         return None
     
+    def get_dentist_name(self, obj):
+        if obj.dentist:
+            return obj.dentist.full_name
+        return None
+    
     def validate_date(self, value):
         if value < timezone.now().date():
             raise serializers.ValidationError("Cannot book appointments for past dates")
-        return value
-    
+        return value    
     def validate(self, data):
         date = data.get('date')
         time = data.get('time')
@@ -71,39 +95,39 @@ class AppointmentSerializer(serializers.ModelSerializer):
         if existing_count >= 2:
             raise serializers.ValidationError({"time": "This time slot is fully booked"})
         
-        if service == "Orthodontic Procedure":
-            end_time = (datetime.combine(date, time) + timedelta(hours=3)).time()
-            
-            if time.hour < 12 and end_time.hour > 12:
-                raise serializers.ValidationError(
-                    {"time": "Orthodontic procedure cannot cross lunch break"}
-                )
-            
-            if end_time.hour > 18 or (end_time.hour == 18 and end_time.minute > 0):
-                raise serializers.ValidationError(
-                    {"time": "Orthodontic procedure must end by 6:00 PM"}
-                )
-            
-            current_time = time
-            for _ in range(6):
-                existing = Appointment.objects.filter(
-                    date=date,
-                    time=current_time,
-                    status__in=['pending', 'confirmed', 'pencil']
-                ).exclude(id=self.instance.id if self.instance else None).count()
-                
-                if existing >= 2:
-                    raise serializers.ValidationError(
-                        {"time": f"Time slot {current_time.strftime('%I:%M %p')} is already booked"}
-                    )
-                
-                current_time = (datetime.combine(date, current_time) + timedelta(minutes=30)).time()
-        
         return data
     
     def create(self, validated_data):
         validated_data['status'] = 'pending'
         return super().create(validated_data)
+
+
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceItem
+        fields = ['id', 'description', 'quantity', 'unit_price', 'total']
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    items = InvoiceItemSerializer(many=True, read_only=True)
+    user_details = UserSerializer(source='user', read_only=True)
+    balance_due = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+        read_only_fields = ['id', 'invoice_number', 'created_at', 'updated_at', 'balance_due']
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    user_details = UserSerializer(source='user', read_only=True)
+    processed_by_details = UserSerializer(source='processed_by', read_only=True)
+    
+    class Meta:
+        model = Payment
+        fields = '__all__'
+        read_only_fields = ['id', 'payment_date']
+
 
 class WaitlistSerializer(serializers.ModelSerializer):
     user_username = serializers.ReadOnlyField(source='user.username')
@@ -130,6 +154,7 @@ class WaitlistSerializer(serializers.ModelSerializer):
     def get_urgency_display(self, obj):
         return dict(Waitlist._meta.get_field('urgency_level').choices).get(obj.urgency_level)
 
+
 class AISuggestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AISuggestion
@@ -139,12 +164,12 @@ class AISuggestionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
 
+
 class BookingReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookingReservation
         fields = ['id', 'user', 'token', 'date', 'time', 'service', 'expires_at', 'is_confirmed', 'created_at']
         read_only_fields = ['id', 'token', 'created_at']
-
 
 
 class LoginSerializer(serializers.Serializer):
@@ -155,6 +180,7 @@ class LoginSerializer(serializers.Serializer):
         ret.pop('password', None)
         return ret
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -164,3 +190,44 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    user_details = UserSerializer(source='user', read_only=True)
+    
+    class Meta:
+        model = AuditLog
+        fields = '__all__'
+        read_only_fields = ['id', 'timestamp']
+
+class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationPreference
+        exclude = ['id', 'user', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    user_details = UserSerializer(source='user', read_only=True)
+    time_ago = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Notification
+        fields = [
+            'id', 'user', 'user_details', 'notification_type', 'title', 'message',
+            'priority', 'channel', 'is_read', 'read_at', 'is_sent', 'sent_at',
+            'action_url', 'action_data', 'related_appointment', 'related_invoice',
+            'related_payment', 'expires_at', 'created_at', 'updated_at', 'time_ago'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'sent_at', 'read_at']
+    
+    def get_time_ago(self, obj):
+        from django.utils.timesince import timesince
+        return timesince(obj.created_at)
+    
+    def create(self, validated_data):
+        validated_data['is_sent'] = True
+        validated_data['sent_at'] = timezone.now()
+        return super().create(validated_data)
+
+

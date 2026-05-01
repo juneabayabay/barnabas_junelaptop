@@ -16,9 +16,9 @@ const Footer = () => {
               Your smile is our priority.
             </p>
             <div className="footer-contact-info">
-              <p>📍 123 Dental Street, Medical District</p>
-              <p>📞 (555) 123-4567</p>
-              <p>✉️ info@barnabasdental.com</p>
+              <p>📍 Blk 1 Lot 15 a Birmingham Springfield Sub Gen Ricarte San Juan Cainta Rizal</p>
+              <p>📞 09684743090</p> 
+              <p>✉️ barnabasdentalclinic@gmail.com</p>
             </div>
           </div>
 
@@ -38,8 +38,8 @@ const Footer = () => {
           <div className="footer-section">
             <h4 className="footer-section-title">Office Hours</h4>
             <ul className="footer-hours">
-              <li><span>Monday - Friday:</span> 9:00 AM - 6:00 PM</li>
-              <li><span>Saturday:</span> 9:00 AM - 2:00 PM</li>
+              <li><span>Monday - Saturday:</span> 9:00 AM - 6:00 PM</li>
+
               <li><span>Sunday:</span> Closed</li>
             </ul>
           </div>
