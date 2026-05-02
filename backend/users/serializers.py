@@ -98,7 +98,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        validated_data['status'] = 'pending'
+    # Don't override status if it's already set
+        if 'status' not in validated_data:
+            validated_data['status'] = 'pending'
         return super().create(validated_data)
 
 

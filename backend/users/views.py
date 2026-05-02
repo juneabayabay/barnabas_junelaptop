@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model, authenticate
 from django.utils import timezone
-from datetime import timedelta
+from datetime import datetime, timedelta
 import uuid
 from django.db import models
 from rest_framework.exceptions import PermissionDenied
@@ -21,6 +21,13 @@ from .tasks import (
     send_invoice_email, check_overdue_invoices
 )
 from .ai_service import AIDentalScheduler, GeminiAIAssistant
+
+# Constants
+CLINIC_OPEN = 9
+CLINIC_CLOSE = 18
+LUNCH_START = 12
+LUNCH_END = 13
+MAX_PER_SLOT = 2
 
 User = get_user_model()
 
@@ -42,6 +49,7 @@ class RegisterViewset(viewsets.ViewSet):
 class LoginViewset(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
+    
     def create(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -58,7 +66,7 @@ class LoginViewset(viewsets.ViewSet):
                     }
                 )
             else:
-                return Response({'error':'invalid credentials'}, status=401)
+                return Response({'error': 'invalid credentials'}, status=401)
         else:
             return Response(serializer.errors, status=400)
 
@@ -66,6 +74,7 @@ class LoginViewset(viewsets.ViewSet):
 class AdminLoginViewset(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
+    
     def create(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -77,12 +86,12 @@ class AdminLoginViewset(viewsets.ViewSet):
                 _, token = AuthToken.objects.create(user)
                 return Response(
                     {
-                        'user': {'id': user.id, 'email': user.email, 'is_superuser': user.is_superuser,},
+                        'user': {'id': user.id, 'email': user.email, 'is_superuser': user.is_superuser},
                         'token': token
                     }
                 )
             else:
-                return Response({'error':'invalid credentials'}, status=401)
+                return Response({'error': 'invalid credentials'}, status=401)
         else:
             return Response(serializer.errors, status=400)
 
@@ -101,6 +110,7 @@ class UserViewset(viewsets.ViewSet):
 class PatientRecordViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = PatientRecordSerializer
+    queryset = PatientRecord.objects.all()
     
     def get_queryset(self):
         user = self.request.user
@@ -135,6 +145,7 @@ class PatientRecordViewSet(viewsets.ModelViewSet):
 class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Appointment.objects.all()
     
     def get_queryset(self):
         user = self.request.user
@@ -142,7 +153,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         if user.is_superuser or user.role == 'admin':
             queryset = Appointment.objects.all().select_related('user', 'dentist')
         elif user.is_staff:
-            # Staff can see all appointments but with limited edit
             queryset = Appointment.objects.all().select_related('user', 'dentist')
         else:
             queryset = Appointment.objects.filter(user=user)
@@ -176,29 +186,12 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.id
-        
+        data['status'] = 'pending'  # Force pending status
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         appointment = serializer.save()
-        
-        # Create invoice for confirmed appointments
-        if appointment.status == 'confirmed':
-            self._create_invoice_for_appointment(appointment)
-        
-        # Generate AI suggestions asynchronously
-        generate_ai_recommendations.delay()
-        
-        # Log creation
-        AuditLog.objects.create(
-            user=request.user,
-            action='create',
-            model_name='Appointment',
-            object_id=str(appointment.id),
-            ip_address=request.META.get('REMOTE_ADDR')
-        )
-        
         return Response({
-            'message': 'Appointment created successfully',
+            'message': 'Appointment requested successfully',
             'appointment': serializer.data
         }, status=status.HTTP_201_CREATED)
     
@@ -206,13 +199,17 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         """Create invoice for confirmed appointment"""
         service_prices = {
             'consultation': 500,
-            'teeth_cleaning': 800,
-            'tooth_extraction': 1500,
-            'dental_filling': 1200,
-            'orthodontic': 5000,
+            'teeth_cleaning': 1000,
+            'tooth_extraction': 1000,
+            'dental_filling': 1000,
+            'orthodontic': 50000,
             'root_canal': 3000,
             'dental_implant': 15000,
             'teeth_whitening': 2500,
+            'cleaning': 1000,
+            'extraction': 1000,
+            'filling': 1000,
+            'braces': 50000,
         }
         
         price = service_prices.get(appointment.service, 1000)
@@ -228,12 +225,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         
         InvoiceItem.objects.create(
             invoice=invoice,
-            description=f"Dental Service: {appointment.get_service_display()}",
+            description=f"Dental Service: {appointment.get_service_display() if appointment.service else appointment.service}",
             quantity=1,
             unit_price=price
         )
-        
-        send_invoice_email.delay(invoice.id)
     
     @action(detail=False, methods=['post'])
     def pencil_booking(self, request):
@@ -243,42 +238,71 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         time_slot = request.data.get('time')
         service = request.data.get('service')
         
+        if not date or not time_slot:
+            return Response(
+                {'error': 'Date and time are required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if slot is available
         existing = Appointment.objects.filter(
             date=date,
             time=time_slot,
             status__in=['confirmed', 'pending', 'pencil']
         ).count()
         
-        if existing >= 2:
+        if existing >= MAX_PER_SLOT:
             return Response(
                 {'error': 'Slot is no longer available'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Create pencil booking
         pencil_appt = Appointment.objects.create(
             user=user,
             date=date,
             time=time_slot,
             service=service,
             status='pencil',
-            pencil_expires_at=timezone.now() + timedelta(minutes=settings.PENCIL_BOOKING_MINUTES)
-        )
-        
-        expire_pencil_booking.apply_async(
-            args=[pencil_appt.id],
-            countdown=settings.PENCIL_BOOKING_MINUTES * 60
+            pencil_expires_at=timezone.now() + timedelta(minutes=15)
         )
         
         return Response({
-            'message': f'Pencil booking created! You have {settings.PENCIL_BOOKING_MINUTES} minutes to confirm.',
+            'message': 'Pencil booking created! You have 15 minutes to confirm.',
             'expires_at': pencil_appt.pencil_expires_at,
-            'appointment_id': pencil_appt.id
+            'appointment_id': pencil_appt.id,
+            'minutes_left': 15
         })
+    
+    @action(detail=False, methods=['get'])
+    def check_pencil_booking(self, request):
+        """Check if user has an active pencil booking"""
+        user = request.user
+        
+        active_pencil = Appointment.objects.filter(
+            user=user,
+            status='pencil',
+            pencil_expires_at__gt=timezone.now()
+        ).first()
+        
+        if active_pencil:
+            minutes_left = max(0, int((active_pencil.pencil_expires_at - timezone.now()).total_seconds() / 60))
+            return Response({
+                'has_pencil': True,
+                'appointment_id': active_pencil.id,
+                'minutes_left': minutes_left,
+                'expires_at': active_pencil.pencil_expires_at
+            })
+        
+        return Response({'has_pencil': False})
     
     @action(detail=False, methods=['post'])
     def confirm_pencil_booking(self, request):
         """Convert pencil booking to confirmed appointment"""
         appointment_id = request.data.get('appointment_id')
+        
+        if not appointment_id:
+            return Response({'error': 'Appointment ID is required'}, status=400)
         
         try:
             appointment = Appointment.objects.get(id=appointment_id, user=request.user)
@@ -286,10 +310,22 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             if appointment.status != 'pencil':
                 return Response({'error': 'Not a pencil booking'}, status=400)
             
-            if appointment.pencil_expires_at < timezone.now():
+            if appointment.pencil_expires_at and appointment.pencil_expires_at < timezone.now():
                 appointment.status = 'cancelled'
                 appointment.save()
                 return Response({'error': 'Pencil booking has expired'}, status=400)
+            
+            # Check if slot is still available
+            existing = Appointment.objects.filter(
+                date=appointment.date,
+                time=appointment.time,
+                status__in=['confirmed', 'pending', 'pencil']
+            ).exclude(id=appointment_id).count()
+            
+            if existing >= MAX_PER_SLOT:
+                appointment.status = 'cancelled'
+                appointment.save()
+                return Response({'error': 'Time slot is no longer available'}, status=400)
             
             appointment.status = 'confirmed'
             appointment.pencil_expires_at = None
@@ -305,30 +341,47 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         except Appointment.DoesNotExist:
             return Response({'error': 'Appointment not found'}, status=404)
     
-    @action(detail=False, methods=['post'])
-    def join_waitlist(self, request):
-        """Add user to waitlist"""
-        waitlist_entry = Waitlist.objects.create(
-            user=request.user,
-            preferred_date=request.data.get('preferred_date'),
-            preferred_time_start=request.data.get('time_start'),
-            preferred_time_end=request.data.get('time_end'),
-            service_needed=request.data.get('service'),
-            urgency_level=request.data.get('urgency_level', 1)
-        )
+    @action(detail=False, methods=['get'])
+    def waitlist_status(self, request):
+        """Get current user's waitlist status"""
+        user = request.user
         
-        position = Waitlist.objects.filter(
-            preferred_date=waitlist_entry.preferred_date,
-            urgency_level__gte=waitlist_entry.urgency_level,
-            created_at__lt=waitlist_entry.created_at,
+        # Get all active waitlist entries
+        waitlists = Waitlist.objects.filter(
+            user=user,
             status='active'
-        ).count() + 1
+        ).order_by('-urgency_level', 'created_at')
         
-        return Response({
-            'message': 'Added to waitlist successfully',
-            'position': position,
-            'waitlist': WaitlistSerializer(waitlist_entry).data
-        })
+        result = []
+        for entry in waitlists:
+            # Calculate position
+            position = Waitlist.objects.filter(
+                preferred_date=entry.preferred_date,
+                urgency_level__gte=entry.urgency_level,
+                created_at__lt=entry.created_at,
+                status='active'
+            ).count() + 1
+            
+            result.append({
+                'id': entry.id,
+                'preferred_date': entry.preferred_date,
+                'preferred_time_start': entry.preferred_time_start,
+                'preferred_time_end': entry.preferred_time_end,
+                'service_needed': entry.service_needed,
+                'urgency_level': entry.urgency_level,
+                'status': entry.status,
+                'position': position,
+                'created_at': entry.created_at
+            })
+        
+        return Response({'waitlists': result})
+    
+    @action(detail=False, methods=['get'])
+    def ai_suggestions(self, request):
+        """Get AI-powered suggestions"""
+        suggestions = AISuggestion.objects.filter(user=request.user, is_read=False)
+        serializer = AISuggestionSerializer(suggestions, many=True)
+        return Response({'suggestions': serializer.data})
     
     @action(detail=False, methods=['post'])
     def ai_chat(self, request):
@@ -349,60 +402,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         ai_assistant = GeminiAIAssistant()
         
         # Run async in sync context
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        response = loop.run_until_complete(
-            ai_assistant.generate_chat_response(message, context)
-        )
-        loop.close()
-        
-        return Response({'response': response})
-    
-    @action(detail=False, methods=['get'])
-    def ai_suggestions(self, request):
-        """Get AI-powered suggestions"""
-        suggestions = AISuggestion.objects.filter(user=request.user, is_read=False)
-        serializer = AISuggestionSerializer(suggestions, many=True)
-        return Response({'suggestions': serializer.data})
-    
-    @action(detail=False, methods=['get'])
-    def waitlist_status(self, request):
-        """Get current user's waitlist status and position (using Appointment model)"""
-        user = request.user
-
-        # Get all waitlisted appointments of the user
-        waitlists = Appointment.objects.filter(
-            user=user,
-            status='waitlist'
-        ).order_by('created_at')
-
-        result = []
-
-        for entry in waitlists:
-            # Recalculate position dynamically
-            position = Appointment.objects.filter(
-                date=entry.date,
-                status='waitlist',
-                urgency_level__gte=entry.urgency_level,
-                created_at__lt=entry.created_at
-            ).count() + 1
-
-            result.append({
-                'id': entry.id,
-                'date': entry.date,
-                'time': entry.time,
-                'service': entry.service,
-                'other_concern': entry.other_concern,
-                'urgency_level': entry.urgency_level,
-                'status': entry.status,
-                'position': position,
-                'notes': entry.notes,
-                'created_at': entry.created_at
-            })
-
-        return Response({
-            'waitlists': result
-        })
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            response = loop.run_until_complete(
+                ai_assistant.generate_chat_response(message, context)
+            )
+            loop.close()
+            return Response({'response': response})
+        except Exception as e:
+            return Response({'response': f'AI assistant is temporarily unavailable. Please try again later.'}, status=200)
     
     @action(detail=False, methods=['get'])
     def get_available_slots(self, request):
@@ -418,42 +427,80 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         except ValueError:
             return Response({'error': 'Invalid date format'}, status=400)
         
-        # Get service duration
+        # Service durations (in minutes)
         service_durations = {
             'consultation': 30,
             'teeth_cleaning': 60,
             'tooth_extraction': 60,
             'dental_filling': 60,
-            'orthodontic': 180,
+            'orthodontic': 120,
             'root_canal': 90,
             'dental_implant': 120,
             'teeth_whitening': 60,
+            'cleaning': 60,
+            'extraction': 60,
+            'filling': 60,
+            'braces': 120,
         }
+        
         duration = service_durations.get(service, 60)
         
-        booked_times = Appointment.objects.filter(
+        # Get booked times for the selected date
+        booked_appointments = Appointment.objects.filter(
             date=selected_date,
             status__in=['pending', 'confirmed', 'pencil']
-        ).values_list('time', flat=True)
+        )
         
-        booked_times = [t.strftime('%H:%M') for t in booked_times]
+        booked_times = set()
+        for apt in booked_appointments:
+            booked_times.add(apt.time.strftime('%H:%M'))
         
         available_slots = []
-        for hour in range(9, 18):
-            if hour == 12:
+        
+        # Generate all possible time slots (9 AM to 6 PM, excluding 12-1 PM lunch)
+        for hour in range(CLINIC_OPEN, CLINIC_CLOSE):
+            if hour == LUNCH_START:
                 continue
             for minute in [0, 30]:
                 slot_time = f"{hour:02d}:{minute:02d}"
+                
+                # Skip if slot is booked
                 if slot_time in booked_times:
                     continue
                 
                 slot_datetime = datetime.combine(selected_date, datetime.strptime(slot_time, '%H:%M').time())
                 end_datetime = slot_datetime + timedelta(minutes=duration)
                 
-                if slot_datetime.hour < 12 and end_datetime.hour >= 12:
+                # Check if appointment crosses lunch break
+                if slot_datetime.hour < LUNCH_END and end_datetime.hour >= LUNCH_START:
                     continue
-                if end_datetime.hour > 18 or (end_datetime.hour == 18 and end_datetime.minute > 0):
+                
+                # Check if appointment goes beyond closing time
+                if end_datetime.hour > CLINIC_CLOSE or (end_datetime.hour == CLINIC_CLOSE and end_datetime.minute > 0):
                     continue
+                
+                # Check consecutive slots for longer procedures
+                if duration > 30:
+                    slots_needed = duration // 30
+                    has_consecutive = True
+                    for i in range(1, slots_needed):
+                        next_hour = hour
+                        next_minute = minute + (i * 30)
+                        if next_minute >= 60:
+                            next_hour += 1
+                            next_minute -= 60
+                        
+                        if next_hour >= CLINIC_CLOSE or next_hour == LUNCH_START:
+                            has_consecutive = False
+                            break
+                        
+                        next_time = f"{next_hour:02d}:{next_minute:02d}"
+                        if next_time in booked_times:
+                            has_consecutive = False
+                            break
+                    
+                    if not has_consecutive:
+                        continue
                 
                 available_slots.append({
                     'time': datetime.strptime(slot_time, '%H:%M').strftime('%I:%M %p'),
@@ -463,11 +510,56 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 })
         
         return Response({'available_slots': available_slots})
+    
+    @action(detail=False, methods=['post'])
+    def join_waitlist(self, request):
+        """Add user to waitlist"""
+        user = request.user
+        preferred_date = request.data.get('preferred_date')
+        time_start = request.data.get('time_start', '09:00')
+        time_end = request.data.get('time_end', '17:00')
+        service_needed = request.data.get('service')
+        urgency_level = int(request.data.get('urgency_level', 1))
+        
+        if not preferred_date or not service_needed:
+            return Response(
+                {'error': 'Preferred date and service are required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            preferred_date = datetime.strptime(preferred_date, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid date format'}, status=400)
+        
+        waitlist_entry = Waitlist.objects.create(
+            user=user,
+            preferred_date=preferred_date,
+            preferred_time_start=time_start,
+            preferred_time_end=time_end,
+            service_needed=service_needed,
+            urgency_level=urgency_level
+        )
+        
+        # Calculate position
+        position = Waitlist.objects.filter(
+            preferred_date=preferred_date,
+            urgency_level__gte=urgency_level,
+            created_at__lt=waitlist_entry.created_at,
+            status='active'
+        ).count() + 1
+        
+        return Response({
+            'message': 'Added to waitlist successfully',
+            'position': position,
+            'waitlist_id': waitlist_entry.id
+        })
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = InvoiceSerializer
+    queryset = Invoice.objects.all()
     
     def get_queryset(self):
         user = self.request.user
@@ -511,18 +603,12 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             'payment': PaymentSerializer(payment).data,
             'invoice': self.get_serializer(invoice).data
         })
-    
-    @action(detail=True, methods=['post'])
-    def send_reminder(self, request, pk=None):
-        """Send invoice reminder email"""
-        invoice = self.get_object()
-        send_invoice_email.delay(invoice.id)
-        return Response({'message': 'Reminder sent successfully'})
 
 
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = PaymentSerializer
+    queryset = Payment.objects.all()
     
     def get_queryset(self):
         user = self.request.user
@@ -596,14 +682,12 @@ class StaffViewSet(viewsets.ViewSet):
         """Get revenue statistics"""
         from django.db.models import Sum
         
-        # Today's revenue
         today = timezone.now().date()
         today_revenue = Payment.objects.filter(
             payment_date__date=today,
             status='completed'
         ).aggregate(total=Sum('amount'))['total'] or 0
         
-        # This month's revenue
         this_month = today.replace(day=1)
         month_revenue = Payment.objects.filter(
             payment_date__date__gte=this_month,
@@ -630,8 +714,8 @@ class AdminViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def dashboard_stats(self, request):
         """Get comprehensive dashboard statistics"""
-        from django.db.models import Sum, Count, Q
-        from datetime import datetime, timedelta
+        from django.db.models import Sum, Count
+        from datetime import timedelta
         
         today = timezone.now().date()
         this_month_start = today.replace(day=1)
@@ -650,7 +734,6 @@ class AdminViewSet(viewsets.ViewSet):
                 'confirmed': Appointment.objects.filter(status='confirmed').count(),
                 'completed': Appointment.objects.filter(status='completed').count(),
                 'cancelled': Appointment.objects.filter(status='cancelled').count(),
-                'no_show': Appointment.objects.filter(status='no_show').count(),
                 'today': Appointment.objects.filter(date=today).exclude(status='cancelled').count(),
                 'upcoming_week': Appointment.objects.filter(
                     date__range=[today, today + timedelta(days=7)]
@@ -677,59 +760,14 @@ class AdminViewSet(viewsets.ViewSet):
                 'unread': AISuggestion.objects.filter(is_read=False).count(),
                 'total': AISuggestion.objects.count(),
             },
-            'recent_activity': AuditLogSerializer(AuditLog.objects.all()[:20], many=True).data,
         }
         
         return Response(stats)
-    
-    @action(detail=False, methods=['get'])
-    def user_analytics(self, request):
-        """Get user analytics"""
-        from django.db.models import Count
-        from datetime import timedelta
-        
-        last_30_days = timezone.now().date() - timedelta(days=30)
-        
-        # User registrations by day
-        daily_registrations = User.objects.filter(
-            date_joined__date__gte=last_30_days
-        ).extra({'date': "date(date_joined)"}).values('date').annotate(count=Count('id'))
-        
-        # User activity
-        active_users = Appointment.objects.filter(
-            created_at__date__gte=last_30_days
-        ).values('user__username').annotate(
-            appointments=Count('id')
-        ).order_by('-appointments')[:10]
-        
-        return Response({
-            'daily_registrations': list(daily_registrations),
-            'top_active_users': list(active_users),
-        })
-    
-    @action(detail=False, methods=['get'])
-    def system_logs(self, request):
-        """View system audit logs"""
-        logs = AuditLog.objects.all().select_related('user').order_by('-timestamp')[:100]
-        return Response(AuditLogSerializer(logs, many=True).data)
-    
-    @action(detail=False, methods=['post'])
-    def run_maintenance(self, request):
-        """Run system maintenance tasks"""
-        # Check for overdue invoices
-        check_overdue_invoices.delay()
-        
-        # Check waitlist for slots
-        check_waitlist_for_slots.delay()
-        
-        # Generate AI recommendations
-        generate_ai_recommendations.delay()
-        
-        return Response({'message': 'Maintenance tasks started successfully'})
 
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Notification.objects.all()  # ADD THIS LINE
     
     def get_queryset(self):
         user = self.request.user
